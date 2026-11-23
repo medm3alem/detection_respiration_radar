@@ -37,7 +37,7 @@ combien de personnes sont à bord et si chacune **respire** (et à quel rythme),
 | `radar_vitals/` | bibliothèque : lecture série et TLV (`serie.py`, `tlv.py`), configuration (`cfg_parser.py`), respiration et apnée (`bureau.py`), simulateur |
 | `cfg/` | configurations envoyées à la carte. `cpd_ti.cfg` et `sbr_ti.cfg` viennent de la Radar Toolbox TI ; `bureau_vitals.cfg` et `cpd_vitals.cfg` y ajoutent l'export des données brutes. |
 | `GUIDE_CARTE.md` | pas à pas pour la carte : switches, flashage avec UniFlash, ports COM, dépannage |
-| `tests/` | tests automatiques (`python -m pytest tests`) |
+| `tests/` | tests automatiques (`python -m pytest tests`) ; `python tests/visualiser_tests.py` dessine une figure par test dans `tests/figures/` |
 
 ## Démarrage rapide
 
@@ -181,5 +181,6 @@ radar_vitals/
   simulator.py    simulateur d'habitacle (occupants, respiration, cœur, mouvements)
   processing.py   traitement : zones, présence, respiration, fuites, états
   report.py       affichage, évaluation, figure
-tests/test_base.py
+tests/test_base.py          les 11 tests
+tests/visualiser_tests.py   une figure par test -> tests/figures/
 ```

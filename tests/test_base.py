@@ -230,20 +230,16 @@ def test_sursaut_pendant_apnee():
     assert all(abs(ps - (t - 30)) < 4 for t, _, ps in pendant), pendant
 
 
-def test_deux_personnes():
-    """P1 a 0,6 m (azimut -20 deg) respire a 15 /min ; P2 a 1,2 m (azimut +25 deg) respire a 22 /min et
-    fait une apnee de 35 a 60 s. Les deux rythmes sont trouves ; seule P2 passe en apnee."""
-    from radar_vitals.bureau import CarteRespiration
-    cfg = parse_cfg(Path(CFG).parent / "bureau_vitals.cfg")
-    carte = CarteRespiration(cfg)
-    rng = np.random.default_rng(11)
-    pers = [  # (distance, azimut deg, elevation sin, rythme /min, amplitude m, apnee)
-        (0.6, -20, -0.3, 15.0, 3e-3, None),
-        (1.2, 25, -0.1, 22.0, 2.5e-3, (35.0, 60.0)),
-    ]
+PERSONNES_DEUX = [  # (distance m, azimut deg, elevation sin, rythme /min, amplitude m, apnee (debut, fin))
+    (0.6, -20, -0.3, 15.0, 3e-3, None),
+    (1.2, 25, -0.1, 22.0, 2.5e-3, (35.0, 60.0)),
+]
+
+
+def _scenario_deux(cfg, rng, total=80.0, pers=PERSONNES_DEUX):
+    """Deux personnes : P1 respire a 15 /min ; P2 respire a 22 /min et fait une apnee de 35 a 60 s."""
     t_burst = np.array(cfg.exported_chirp_indices()) * cfg.burst_period_us * 1e-6
-    journal = []
-    for k in range(int(80 * cfg.frame_rate_hz)):
+    for k in range(int(total * cfg.frame_rate_hz)):
         t = k / cfg.frame_rate_hz + t_burst
         cube = (rng.normal(size=(3, cfg.num_range_bins, cfg.num_virt_ant))
                 + 1j * rng.normal(size=(3, cfg.num_range_bins, cfg.num_virt_ant))) * 2
@@ -255,7 +251,18 @@ def test_deux_personnes():
             a = np.conj(cfg.steering(np.sin(np.radians(az)), w0))[0] / cfg.rx_comp
             rb = int(round(r0 / cfg.range_step_m))
             cube[:, rb, :] += (200 * np.exp(1j * 4 * np.pi * d / cfg.wavelength_m))[:, None] * a[None, :]
-        carte.push(tlv.Frame(frame_number=k, num_detected_obj=0, radar_cube=cube.astype(np.complex64)))
+        yield k, cube.astype(np.complex64)
+
+
+def test_deux_personnes():
+    """P1 a 0,6 m (azimut -20 deg) respire a 15 /min ; P2 a 1,2 m (azimut +25 deg) respire a 22 /min et
+    fait une apnee de 35 a 60 s. Les deux rythmes sont trouves ; seule P2 passe en apnee."""
+    from radar_vitals.bureau import CarteRespiration
+    cfg = parse_cfg(Path(CFG).parent / "bureau_vitals.cfg")
+    carte = CarteRespiration(cfg)
+    journal = []
+    for k, cube in _scenario_deux(cfg, np.random.default_rng(11)):
+        carte.push(tlv.Frame(frame_number=k, num_detected_obj=0, radar_cube=cube))
         if k % 2 == 1 and k > 20:
             journal.append((k / cfg.frame_rate_hz, carte.analyser()))
 
