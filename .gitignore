@@ -1,0 +1,16 @@
+﻿# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+# Enregistrements bruts : seuls ceux copies dans essais/ sont versionnes
+enregistrements/
+resultats_sim/
+*.bin
+*.npz
+!essais/*.bin
+# Editeurs / systeme
+.vscode/
+.idea/
+Thumbs.db
